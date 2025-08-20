@@ -8,6 +8,23 @@
     <link rel='stylesheet' type='text/css' media='screen' href='styles/main.css'>
 
     <link rel='stylesheet' type='text/css' media='screen' href='styles/room.css'>
+
+    <style>
+    #fullscreenBtn {
+        font-size: 20px; /* 增大字体大小 */
+        padding: 10px 20px; /* 增加内边距 */
+        background-color: #007BFF; /* 背景颜色 */
+        color: #fff; /* 文字颜色 */
+        border: none; /* 去除边框 */
+        border-radius: 5px; /* 圆角 */
+        cursor: pointer; /* 鼠标指针样式 */
+    }
+
+    #fullscreenBtn:hover {
+        background-color: #0056b3; /* 鼠标悬停时的背景颜色 */
+    }
+</style>
+
 </head>
 <body>
 
@@ -71,6 +88,9 @@
                     <button id="leave-btn" style="background-color: #FF5050;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 10v-5l8 7-8 7v-5h-8v-4h8zm-16-8v20h14v-2h-12v-16h12v-2h-14z"/></svg>
                     </button>
+
+                    <button id="fullscreenBtn">全屏</button>
+                    
                 </div>
 
                 <button id="join-btn">Join Stream</button>
@@ -85,10 +105,61 @@
                 </form>
 
             </section>
+            
+
         </div>
     </main>
     
 </body>
+
+<script>
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+fullscreenBtn.addEventListener('click', (event) => {
+    console.log('点击了全屏按钮');
+    const videoElement = document.querySelector('.agora_video_player'); // 选择页面上的第一个视频元素
+    if(!videoElement) {
+        console.log('没有找到视频元素');
+        return;
+    }
+    // block 
+
+    // search by id
+    document.getElementById("members__container").style.display = 'none';
+    document.getElementById("messages__container").style.display = 'none';
+
+    // 检查浏览器是否支持全屏模式
+    if (videoElement.requestFullscreen) {
+        videoElement.requestFullscreen();
+    } else if (videoElement.mozRequestFullScreen) {
+        videoElement.mozRequestFullScreen();
+    } else if (videoElement.webkitRequestFullscreen) {
+        videoElement.webkitRequestFullscreen();
+    } else if (videoElement.msRequestFullscreen) {
+        videoElement.msRequestFullscreen();
+    }
+});
+
+// // 假设视频元素是通过某个方法动态生成的
+// function createVideoElement() {
+//     const video = document.createElement('video');
+//     video.classList.add('agora_video_player');
+//     // video.playsinline = true;
+//     // video.muted = true;
+//     // video.style.width = '100%';
+//     // video.style.height = '100%';
+//     // video.style.position = 'absolute';
+//     // video.style.left = '0px';
+//     // video.style.top = '0px';
+//     // video.style.objectFit = 'contain';
+
+//     // 将视频元素添加到页面中
+//     document.querySelector('main').appendChild(video);
+// }
+
+// // 模拟视频元素的创建
+// createVideoElement();
+</script>
 <script type="text/javascript" src="js/AgoraRTC_N-4.11.0.js"></script>
 <script type="text/javascript" src="js/agora-rtm-sdk-1.4.4.js"></script>
 <script type="text/javascript" src="js/room.js"></script>

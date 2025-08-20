@@ -39,6 +39,8 @@
 
     <main class="container">
         <div id="room__container">
+            
+            
             <section id="members__container">
 
             <div id="members__header">
@@ -175,7 +177,7 @@
             </section>
 
             <section id="messages__container">
-
+                
                 <div id="messages">
                     <div class="message__wrapper">
                         <div class="message__body__bot">
@@ -305,9 +307,30 @@
                 </form>
 
             </section>
+            
         </div>
     </main>
     
+    
 </body>
 <script type="text/javascript" src="js/room.js"></script>
+
+<script>
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const videoElement = document.getElementsByClassName('agora_video_player')[0]; // 替换为你的视频元素ID
+
+    fullscreenBtn.addEventListener('click', () => {
+        console.log('点击了全屏按钮');
+        
+        if (videoElement.requestFullscreen) {
+            videoElement.requestFullscreen();
+        } else if (videoElement.mozRequestFullScreen) {
+            videoElement.mozRequestFullScreen();
+        } else if (videoElement.webkitRequestFullscreen) {
+            videoElement.webkitRequestFullscreen();
+        } else if (videoElement.msRequestFullscreen) {
+            videoElement.msRequestFullscreen();
+        }
+    });
+</script>
 </html>

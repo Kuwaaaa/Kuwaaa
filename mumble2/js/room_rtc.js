@@ -1,7 +1,7 @@
 const APP_ID = "1599b37bd44d4295a4fbec6662ddc379"
 
 let uid = sessionStorage.getItem('uid')
-if(!uid){
+if (!uid) {
     uid = String(Math.floor(Math.random() * 10000))
     sessionStorage.setItem('uid', uid)
 }
@@ -16,12 +16,12 @@ const queryString = window.location.search
 const urlParams = new URLSearchParams(queryString)
 let roomId = urlParams.get('room')
 
-if(!roomId){
+if (!roomId) {
     roomId = 'main'
 }
 
 let displayName = sessionStorage.getItem('display_name')
-if(!displayName){
+if (!displayName) {
     window.location = 'lobby.html'
 }
 
@@ -33,9 +33,9 @@ let sharingScreen = false;
 
 let joinRoomInit = async () => {
     rtmClient = await AgoraRTM.createInstance(APP_ID)
-    await rtmClient.login({uid,token})
+    await rtmClient.login({ uid, token })
 
-    await rtmClient.addOrUpdateLocalUserAttributes({'name':displayName})
+    await rtmClient.addOrUpdateLocalUserAttributes({ 'name': displayName })
 
     channel = await rtmClient.createChannel(roomId)
     await channel.join()
@@ -47,7 +47,7 @@ let joinRoomInit = async () => {
     getMembers()
     addBotMessageToDom(`Welcome to the room ${displayName}! 👋`)
 
-    client = AgoraRTC.createClient({mode:'rtc', codec:'vp8'})
+    client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
     await client.join(APP_ID, roomId, token, uid)
 
     client.on('user-published', handleUserPublished)
@@ -58,10 +58,12 @@ let joinStream = async () => {
     document.getElementById('join-btn').style.display = 'none'
     document.getElementsByClassName('stream__actions')[0].style.display = 'flex'
 
-    localTracks = await AgoraRTC.createMicrophoneAndCameraTracks({}, {encoderConfig:{
-        width:{min:640, ideal:1920, max:1920},
-        height:{min:480, ideal:1080, max:1080}
-    }})
+    localTracks = await AgoraRTC.createMicrophoneAndCameraTracks({}, {
+        encoderConfig: {
+            width: { min: 640, ideal: 1920, max: 1920 },
+            height: { min: 480, ideal: 1080, max: 1080 }
+        }
+    })
 
 
     let player = `<div class="video__container" id="user-container-${uid}">
@@ -97,27 +99,27 @@ let handleUserPublished = async (user, mediaType) => {
     await client.subscribe(user, mediaType)
 
     let player = document.getElementById(`user-container-${user.uid}`)
-    if(player === null){
+    if (player === null) {
         player = `<div class="video__container" id="user-container-${user.uid}">
                 <div class="video-player" id="user-${user.uid}"></div>
             </div>`
 
         document.getElementById('streams__container').insertAdjacentHTML('beforeend', player)
         document.getElementById(`user-container-${user.uid}`).addEventListener('click', expandVideoFrame)
-   
+
     }
 
-    if(displayFrame.style.display){
+    if (displayFrame.style.display) {
         let videoFrame = document.getElementById(`user-container-${user.uid}`)
         videoFrame.style.height = '100px'
         videoFrame.style.width = '100px'
     }
 
-    if(mediaType === 'video'){
+    if (mediaType === 'video') {
         user.videoTrack.play(`user-${user.uid}`)
     }
 
-    if(mediaType === 'audio'){
+    if (mediaType === 'audio') {
         user.audioTrack.play()
     }
 
@@ -126,16 +128,16 @@ let handleUserPublished = async (user, mediaType) => {
 let handleUserLeft = async (user) => {
     delete remoteUsers[user.uid]
     let item = document.getElementById(`user-container-${user.uid}`)
-    if(item){
+    if (item) {
         item.remove()
     }
 
-    if(userIdInDisplayFrame === `user-container-${user.uid}`){
+    if (userIdInDisplayFrame === `user-container-${user.uid}`) {
         displayFrame.style.display = null
-        
+
         let videoFrames = document.getElementsByClassName('video__container')
 
-        for(let i = 0; videoFrames.length > i; i++){
+        for (let i = 0; videoFrames.length > i; i++) {
             videoFrames[i].style.height = '300px'
             videoFrames[i].style.width = '300px'
         }
@@ -145,10 +147,10 @@ let handleUserLeft = async (user) => {
 let toggleMic = async (e) => {
     let button = e.currentTarget
 
-    if(localTracks[0].muted){
+    if (localTracks[0].muted) {
         await localTracks[0].setMuted(false)
         button.classList.add('active')
-    }else{
+    } else {
         await localTracks[0].setMuted(true)
         button.classList.remove('active')
     }
@@ -157,10 +159,10 @@ let toggleMic = async (e) => {
 let toggleCamera = async (e) => {
     let button = e.currentTarget
 
-    if(localTracks[1].muted){
+    if (localTracks[1].muted) {
         await localTracks[1].setMuted(false)
         button.classList.add('active')
-    }else{
+    } else {
         await localTracks[1].setMuted(true)
         button.classList.remove('active')
     }
@@ -177,7 +179,18 @@ let toggleScreen = async (e) => {
         cameraButton.classList.remove('active')
         cameraButton.style.display = 'none'
 
-        localScreenTracks = await AgoraRTC.createScreenVideoTrack()
+        // --- 从这里开始修改 ---
+        console.log("正在创建高清屏幕共享轨道...");
+        localScreenTracks = await AgoraRTC.createScreenVideoTrack({
+            encoderConfig: {
+                width: 1920,
+                height: 1080,
+                frameRate: 15,
+                bitrateMin: 2000,
+            },
+            optimizationMode: "detail" 
+        }, "auto");
+        // --- 修改结束 ---
 
         document.getElementById(`user-container-${uid}`).remove()
         displayFrame.style.display = 'block'
@@ -193,7 +206,7 @@ let toggleScreen = async (e) => {
         localScreenTracks.play(`user-${uid}`)
 
         await client.unpublish([localTracks[1]])
-        await client.publish([localScreenTracks])
+        await client.publish(localScreenTracks) // 注意：publish 不再需要数组包裹单个轨道
 
         let videoFrames = document.getElementsByClassName('video__container')
         for(let i = 0; videoFrames.length > i; i++){
@@ -203,16 +216,16 @@ let toggleScreen = async (e) => {
             }
           }
 
-
     }else{
         sharingScreen = false 
         cameraButton.style.display = 'block'
         document.getElementById(`user-container-${uid}`).remove()
-        await client.unpublish([localScreenTracks])
+        await client.unpublish(localScreenTracks) // 注意：unpublish 不再需要数组包裹单个轨道
 
         switchToCamera()
     }
 }
+
 
 let leaveStream = async (e) => {
     e.preventDefault()
@@ -220,29 +233,29 @@ let leaveStream = async (e) => {
     document.getElementById('join-btn').style.display = 'block'
     document.getElementsByClassName('stream__actions')[0].style.display = 'none'
 
-    for(let i = 0; localTracks.length > i; i++){
+    for (let i = 0; localTracks.length > i; i++) {
         localTracks[i].stop()
         localTracks[i].close()
     }
 
     await client.unpublish([localTracks[0], localTracks[1]])
 
-    if(localScreenTracks){
+    if (localScreenTracks) {
         await client.unpublish([localScreenTracks])
     }
 
     document.getElementById(`user-container-${uid}`).remove()
 
-    if(userIdInDisplayFrame === `user-container-${uid}`){
+    if (userIdInDisplayFrame === `user-container-${uid}`) {
         displayFrame.style.display = null
 
-        for(let i = 0; videoFrames.length > i; i++){
+        for (let i = 0; videoFrames.length > i; i++) {
             videoFrames[i].style.height = '300px'
             videoFrames[i].style.width = '300px'
         }
     }
 
-    channel.sendMessage({text:JSON.stringify({'type':'user_left', 'uid':uid})})
+    channel.sendMessage({ text: JSON.stringify({ 'type': 'user_left', 'uid': uid }) })
 }
 
 
